@@ -27,9 +27,23 @@ func (a *app) newTasksCmd() *cobra.Command {
 	}
 	list.Flags().StringVar(&projectID, "project-id", "", "Project id")
 
-	var title, content, due string
-	var priority int
-	var addProjectID string
+	get := &cobra.Command{
+		Use:   "get <project-id> <task-id>",
+		Short: "Get task by project and task id",
+		Args:  cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			item, err := a.client.GetTask(context.Background(), args[0], args[1])
+			if err != nil {
+				return err
+			}
+			return a.print(item)
+		},
+	}
+
+	var addProjectID, addTitle, addContent, addDesc, addStart, addDue, addTimeZone, addRepeat string
+	var addPriority int
+	var addAllDay bool
+	var addReminders []string
 	add := &cobra.Command{
 		Use:   "add",
 		Short: "Create a task",
@@ -37,19 +51,29 @@ func (a *app) newTasksCmd() *cobra.Command {
 			if err := required(addProjectID, "--project-id"); err != nil {
 				return err
 			}
-			if err := required(title, "--title"); err != nil {
+			if err := required(addTitle, "--title"); err != nil {
 				return err
 			}
-			dueDate, err := parseDueDate(due)
+			startDate, err := parseDateTime(addStart)
+			if err != nil {
+				return err
+			}
+			dueDate, err := parseDateTime(addDue)
 			if err != nil {
 				return err
 			}
 			created, err := a.client.CreateTask(context.Background(), ticktick.Task{
-				ProjectID: addProjectID,
-				Title:     title,
-				Content:   content,
-				DueDate:   dueDate,
-				Priority:  priority,
+				ProjectID:  addProjectID,
+				Title:      addTitle,
+				Content:    addContent,
+				Desc:       addDesc,
+				StartDate:  startDate,
+				DueDate:    dueDate,
+				TimeZone:   addTimeZone,
+				RepeatFlag: addRepeat,
+				Reminders:  addReminders,
+				Priority:   addPriority,
+				IsAllDay:   addAllDay,
 			})
 			if err != nil {
 				return err
@@ -58,10 +82,68 @@ func (a *app) newTasksCmd() *cobra.Command {
 		},
 	}
 	add.Flags().StringVar(&addProjectID, "project-id", "", "Project id")
-	add.Flags().StringVar(&title, "title", "", "Task title")
-	add.Flags().StringVar(&content, "content", "", "Task notes/content")
-	add.Flags().StringVar(&due, "due", "", "Due date (RFC3339 or YYYY-MM-DD)")
-	add.Flags().IntVar(&priority, "priority", 0, "Priority: 0 none, 1 low, 3 medium, 5 high")
+	add.Flags().StringVar(&addTitle, "title", "", "Task title")
+	add.Flags().StringVar(&addContent, "content", "", "Task content")
+	add.Flags().StringVar(&addDesc, "desc", "", "Task checklist description")
+	add.Flags().StringVar(&addStart, "start", "", "Start date (RFC3339 or YYYY-MM-DD)")
+	add.Flags().StringVar(&addDue, "due", "", "Due date (RFC3339 or YYYY-MM-DD)")
+	add.Flags().StringVar(&addTimeZone, "time-zone", "", "IANA timezone (e.g. America/Los_Angeles)")
+	add.Flags().StringVar(&addRepeat, "repeat", "", "Recurring rule (e.g. RRULE:FREQ=DAILY;INTERVAL=1)")
+	add.Flags().StringSliceVar(&addReminders, "reminder", nil, "Reminder trigger(s), repeatable")
+	add.Flags().BoolVar(&addAllDay, "all-day", false, "Mark task as all-day")
+	add.Flags().IntVar(&addPriority, "priority", 0, "Priority: 0 none, 1 low, 3 medium, 5 high")
+
+	var updateProjectID, updateTitle, updateContent, updateDesc, updateStart, updateDue, updateTimeZone, updateRepeat string
+	var updatePriority int
+	var updateAllDay bool
+	var updateReminders []string
+	update := &cobra.Command{
+		Use:   "update <task-id>",
+		Short: "Update a task",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if err := required(updateProjectID, "--project-id"); err != nil {
+				return err
+			}
+			startDate, err := parseDateTime(updateStart)
+			if err != nil {
+				return err
+			}
+			dueDate, err := parseDateTime(updateDue)
+			if err != nil {
+				return err
+			}
+			updated, err := a.client.UpdateTask(context.Background(), args[0], ticktick.Task{
+				ID:         args[0],
+				ProjectID:  updateProjectID,
+				Title:      updateTitle,
+				Content:    updateContent,
+				Desc:       updateDesc,
+				StartDate:  startDate,
+				DueDate:    dueDate,
+				TimeZone:   updateTimeZone,
+				RepeatFlag: updateRepeat,
+				Reminders:  updateReminders,
+				Priority:   updatePriority,
+				IsAllDay:   updateAllDay,
+			})
+			if err != nil {
+				return err
+			}
+			return a.print(updated)
+		},
+	}
+	update.Flags().StringVar(&updateProjectID, "project-id", "", "Project id (required by API)")
+	update.Flags().StringVar(&updateTitle, "title", "", "Task title")
+	update.Flags().StringVar(&updateContent, "content", "", "Task content")
+	update.Flags().StringVar(&updateDesc, "desc", "", "Task checklist description")
+	update.Flags().StringVar(&updateStart, "start", "", "Start date (RFC3339 or YYYY-MM-DD)")
+	update.Flags().StringVar(&updateDue, "due", "", "Due date (RFC3339 or YYYY-MM-DD)")
+	update.Flags().StringVar(&updateTimeZone, "time-zone", "", "IANA timezone (e.g. America/Los_Angeles)")
+	update.Flags().StringVar(&updateRepeat, "repeat", "", "Recurring rule (e.g. RRULE:FREQ=DAILY;INTERVAL=1)")
+	update.Flags().StringSliceVar(&updateReminders, "reminder", nil, "Reminder trigger(s), repeatable")
+	update.Flags().BoolVar(&updateAllDay, "all-day", false, "Mark task as all-day")
+	update.Flags().IntVar(&updatePriority, "priority", 0, "Priority: 0 none, 1 low, 3 medium, 5 high")
 
 	complete := &cobra.Command{
 		Use:   "complete <project-id> <task-id>",
@@ -87,6 +169,6 @@ func (a *app) newTasksCmd() *cobra.Command {
 		},
 	}
 
-	tasks.AddCommand(list, add, complete, deleteCmd)
+	tasks.AddCommand(list, get, add, update, complete, deleteCmd)
 	return tasks
 }

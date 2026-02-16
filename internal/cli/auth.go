@@ -80,14 +80,14 @@ func (a *app) newAuthCmd() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			path, _ := config.Path()
 			masked := map[string]any{
-				"client_id":      a.cfg.ClientID,
-				"redirect_uri":   a.cfg.RedirectURI,
-				"has_access":     a.cfg.AccessToken != "",
-				"has_refresh":    a.cfg.RefreshToken != "",
-				"expiry":         a.cfg.Expiry,
-				"scope":          a.cfg.Scope,
-				"client_secret":  a.cfg.ClientSecret != "",
-				"token_type":     a.cfg.TokenType,
+				"client_id":       a.cfg.ClientID,
+				"redirect_uri":    a.cfg.RedirectURI,
+				"has_access":      a.cfg.AccessToken != "",
+				"has_refresh":     a.cfg.RefreshToken != "",
+				"expiry":          a.cfg.Expiry,
+				"scope":           a.cfg.Scope,
+				"client_secret":   a.cfg.ClientSecret != "",
+				"token_type":      a.cfg.TokenType,
 				"config_location": path,
 			}
 			return a.print(masked)

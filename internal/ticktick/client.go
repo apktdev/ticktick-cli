@@ -34,24 +34,59 @@ type tokenResponse struct {
 }
 
 type Project struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
+	ID         string `json:"id,omitempty"`
+	Name       string `json:"name,omitempty"`
+	Color      string `json:"color,omitempty"`
+	SortOrder  int64  `json:"sortOrder,omitempty"`
+	ViewMode   string `json:"viewMode,omitempty"`
+	Kind       string `json:"kind,omitempty"`
+	Closed     bool   `json:"closed,omitempty"`
+	GroupID    string `json:"groupId,omitempty"`
+	Permission string `json:"permission,omitempty"`
+}
+
+type ChecklistItem struct {
+	ID            string `json:"id,omitempty"`
+	Title         string `json:"title,omitempty"`
+	Status        int    `json:"status,omitempty"`
+	CompletedTime string `json:"completedTime,omitempty"`
+	IsAllDay      bool   `json:"isAllDay,omitempty"`
+	SortOrder     int64  `json:"sortOrder,omitempty"`
+	StartDate     string `json:"startDate,omitempty"`
+	TimeZone      string `json:"timeZone,omitempty"`
 }
 
 type Task struct {
-	ID        string `json:"id"`
+	ID            string          `json:"id,omitempty"`
+	ProjectID     string          `json:"projectId,omitempty"`
+	Title         string          `json:"title,omitempty"`
+	Content       string          `json:"content,omitempty"`
+	Desc          string          `json:"desc,omitempty"`
+	IsAllDay      bool            `json:"isAllDay,omitempty"`
+	StartDate     string          `json:"startDate,omitempty"`
+	DueDate       string          `json:"dueDate,omitempty"`
+	TimeZone      string          `json:"timeZone,omitempty"`
+	Reminders     []string        `json:"reminders,omitempty"`
+	RepeatFlag    string          `json:"repeatFlag,omitempty"`
+	Priority      int             `json:"priority,omitempty"`
+	Status        int             `json:"status,omitempty"`
+	CompletedTime string          `json:"completedTime,omitempty"`
+	SortOrder     int64           `json:"sortOrder,omitempty"`
+	Items         []ChecklistItem `json:"items,omitempty"`
+	Kind          string          `json:"kind,omitempty"`
+}
+
+type ProjectColumn struct {
+	ID        string `json:"id,omitempty"`
 	ProjectID string `json:"projectId,omitempty"`
-	Title     string `json:"title"`
-	Content   string `json:"content,omitempty"`
-	Desc      string `json:"desc,omitempty"`
-	DueDate   string `json:"dueDate,omitempty"`
-	Priority  int    `json:"priority,omitempty"`
-	Status    int    `json:"status,omitempty"`
+	Name      string `json:"name,omitempty"`
+	SortOrder int64  `json:"sortOrder,omitempty"`
 }
 
 type ProjectData struct {
-	Project Project `json:"project"`
-	Tasks   []Task  `json:"tasks"`
+	Project Project         `json:"project"`
+	Tasks   []Task          `json:"tasks"`
+	Columns []ProjectColumn `json:"columns,omitempty"`
 }
 
 func New(cfg *config.Config) *Client {
@@ -216,6 +251,14 @@ func (c *Client) ListProjects(ctx context.Context) ([]Project, error) {
 	return projects, nil
 }
 
+func (c *Client) GetProject(ctx context.Context, projectID string) (*Project, error) {
+	var project Project
+	if err := c.doJSON(ctx, http.MethodGet, "/project/"+url.PathEscape(projectID), nil, &project); err != nil {
+		return nil, err
+	}
+	return &project, nil
+}
+
 func (c *Client) ProjectData(ctx context.Context, projectID string) (*ProjectData, error) {
 	var data ProjectData
 	if err := c.doJSON(ctx, http.MethodGet, "/project/"+url.PathEscape(projectID)+"/data", nil, &data); err != nil {
@@ -224,12 +267,48 @@ func (c *Client) ProjectData(ctx context.Context, projectID string) (*ProjectDat
 	return &data, nil
 }
 
+func (c *Client) CreateProject(ctx context.Context, project Project) (*Project, error) {
+	var created Project
+	if err := c.doJSON(ctx, http.MethodPost, "/project", project, &created); err != nil {
+		return nil, err
+	}
+	return &created, nil
+}
+
+func (c *Client) UpdateProject(ctx context.Context, projectID string, project Project) (*Project, error) {
+	var updated Project
+	if err := c.doJSON(ctx, http.MethodPost, "/project/"+url.PathEscape(projectID), project, &updated); err != nil {
+		return nil, err
+	}
+	return &updated, nil
+}
+
+func (c *Client) DeleteProject(ctx context.Context, projectID string) error {
+	return c.doJSON(ctx, http.MethodDelete, "/project/"+url.PathEscape(projectID), nil, nil)
+}
+
+func (c *Client) GetTask(ctx context.Context, projectID, taskID string) (*Task, error) {
+	var task Task
+	if err := c.doJSON(ctx, http.MethodGet, "/project/"+url.PathEscape(projectID)+"/task/"+url.PathEscape(taskID), nil, &task); err != nil {
+		return nil, err
+	}
+	return &task, nil
+}
+
 func (c *Client) CreateTask(ctx context.Context, task Task) (*Task, error) {
 	var created Task
 	if err := c.doJSON(ctx, http.MethodPost, "/task", task, &created); err != nil {
 		return nil, err
 	}
 	return &created, nil
+}
+
+func (c *Client) UpdateTask(ctx context.Context, taskID string, task Task) (*Task, error) {
+	var updated Task
+	if err := c.doJSON(ctx, http.MethodPost, "/task/"+url.PathEscape(taskID), task, &updated); err != nil {
+		return nil, err
+	}
+	return &updated, nil
 }
 
 func (c *Client) CompleteTask(ctx context.Context, projectID, taskID string) error {

@@ -73,7 +73,7 @@ func (a *app) print(v any) error {
 	return nil
 }
 
-func parseDueDate(input string) (string, error) {
+func parseDateTime(input string) (string, error) {
 	if input == "" {
 		return "", nil
 	}
@@ -84,7 +84,7 @@ func parseDueDate(input string) (string, error) {
 			return t.Format("2006-01-02T15:04:05-0700"), nil
 		}
 	}
-	return "", fmt.Errorf("invalid due date format %q; use RFC3339 or YYYY-MM-DD", input)
+	return "", fmt.Errorf("invalid date format %q; use RFC3339 or YYYY-MM-DD", input)
 }
 
 func required(val, name string) error {
