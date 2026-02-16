@@ -6,15 +6,16 @@ import (
 	"os"
 	"time"
 
-	"github.com/adrian/ticktick-cli/internal/config"
-	"github.com/adrian/ticktick-cli/internal/ticktick"
+	"github.com/apktdev/ticktick-cli/internal/config"
+	"github.com/apktdev/ticktick-cli/internal/ticktick"
 	"github.com/spf13/cobra"
 )
 
 type app struct {
-	cfg      *config.Config
-	client   *ticktick.Client
-	jsonMode bool
+	cfg           *config.Config
+	client        *ticktick.Client
+	jsonMode      bool
+	shouldPersist bool
 }
 
 func NewRootCmd() *cobra.Command {
@@ -22,8 +23,16 @@ func NewRootCmd() *cobra.Command {
 	if err != nil {
 		panic(err)
 	}
+	envOverride, err := config.ApplyEnvOverrides(cfg)
+	if err != nil {
+		panic(err)
+	}
 
-	a := &app{cfg: cfg, client: ticktick.New(cfg)}
+	a := &app{
+		cfg:           cfg,
+		client:        ticktick.New(cfg),
+		shouldPersist: !envOverride,
+	}
 	root := &cobra.Command{
 		Use:   "tick",
 		Short: "TickTick command line client",
@@ -31,6 +40,9 @@ func NewRootCmd() *cobra.Command {
 			return nil
 		},
 		PersistentPostRunE: func(cmd *cobra.Command, args []string) error {
+			if !a.shouldPersist {
+				return nil
+			}
 			return config.Save(a.cfg)
 		},
 	}

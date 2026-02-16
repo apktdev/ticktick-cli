@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/adrian/ticktick-cli/internal/config"
-	"github.com/adrian/ticktick-cli/internal/ticktick"
+	"github.com/apktdev/ticktick-cli/internal/config"
+	"github.com/apktdev/ticktick-cli/internal/ticktick"
 	"github.com/spf13/cobra"
 )
 

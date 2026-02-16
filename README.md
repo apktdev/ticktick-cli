@@ -20,6 +20,18 @@ A Go-based TickTick CLI inspired by the command-oriented style of `gogcli`.
 go build -o tick ./cmd/tick
 ```
 
+3. Install globally (pick one):
+
+```bash
+go install github.com/apktdev/ticktick-cli/cmd/tick@latest
+```
+
+or
+
+```bash
+sudo install -m 0755 ./tick /usr/local/bin/tick
+```
+
 ## OAuth setup
 
 Create a TickTick app and get:
@@ -67,6 +79,16 @@ Use JSON mode when scripting:
 ## Notes
 
 - Config is stored at your OS config dir, typically `~/.config/tickcli/config.json`.
+- You can run fully from environment variables instead of config file:
+  - `TICKTICK_ACCESS_TOKEN`
+  - `TICKTICK_CLIENT_ID`
+  - `TICKTICK_CLIENT_SECRET`
+  - `TICKTICK_REDIRECT_URI`
+  - `TICKTICK_REFRESH_TOKEN`
+  - `TICKTICK_TOKEN_TYPE`
+  - `TICKTICK_SCOPE`
+  - `TICKTICK_TOKEN_EXPIRY` (RFC3339, e.g. `2026-08-15T14:47:20Z`)
+- When any env var above is set, env values override file config and config is not auto-saved.
 - Date flags (`--start`, `--due`) accept RFC3339 or `YYYY-MM-DD`.
 - Official endpoints covered:
   - `GET /open/v1/project`

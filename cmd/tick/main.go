@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/adrian/ticktick-cli/internal/cli"
+	"github.com/apktdev/ticktick-cli/internal/cli"
 )
 
 func main() {

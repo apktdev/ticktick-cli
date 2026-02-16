@@ -11,6 +11,15 @@ import (
 const (
 	configDirName  = "tickcli"
 	configFileName = "config.json"
+
+	EnvClientID     = "TICKTICK_CLIENT_ID"
+	EnvClientSecret = "TICKTICK_CLIENT_SECRET"
+	EnvRedirectURI  = "TICKTICK_REDIRECT_URI"
+	EnvAccessToken  = "TICKTICK_ACCESS_TOKEN"
+	EnvRefreshToken = "TICKTICK_REFRESH_TOKEN"
+	EnvTokenType    = "TICKTICK_TOKEN_TYPE"
+	EnvScope        = "TICKTICK_SCOPE"
+	EnvExpiry       = "TICKTICK_TOKEN_EXPIRY"
 )
 
 type Config struct {
@@ -72,4 +81,47 @@ func Save(cfg *Config) error {
 		return fmt.Errorf("write config: %w", err)
 	}
 	return nil
+}
+
+func ApplyEnvOverrides(cfg *Config) (bool, error) {
+	applied := false
+
+	if v := os.Getenv(EnvClientID); v != "" {
+		cfg.ClientID = v
+		applied = true
+	}
+	if v := os.Getenv(EnvClientSecret); v != "" {
+		cfg.ClientSecret = v
+		applied = true
+	}
+	if v := os.Getenv(EnvRedirectURI); v != "" {
+		cfg.RedirectURI = v
+		applied = true
+	}
+	if v := os.Getenv(EnvAccessToken); v != "" {
+		cfg.AccessToken = v
+		applied = true
+	}
+	if v := os.Getenv(EnvRefreshToken); v != "" {
+		cfg.RefreshToken = v
+		applied = true
+	}
+	if v := os.Getenv(EnvTokenType); v != "" {
+		cfg.TokenType = v
+		applied = true
+	}
+	if v := os.Getenv(EnvScope); v != "" {
+		cfg.Scope = v
+		applied = true
+	}
+	if v := os.Getenv(EnvExpiry); v != "" {
+		t, err := time.Parse(time.RFC3339, v)
+		if err != nil {
+			return applied, fmt.Errorf("%s must be RFC3339: %w", EnvExpiry, err)
+		}
+		cfg.Expiry = t
+		applied = true
+	}
+
+	return applied, nil
 }

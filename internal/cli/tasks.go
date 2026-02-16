@@ -3,7 +3,7 @@ package cli
 import (
 	"context"
 
-	"github.com/adrian/ticktick-cli/internal/ticktick"
+	"github.com/apktdev/ticktick-cli/internal/ticktick"
 	"github.com/spf13/cobra"
 )
 

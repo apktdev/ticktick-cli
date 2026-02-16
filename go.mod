@@ -1,4 +1,4 @@
-module github.com/adrian/ticktick-cli
+module github.com/apktdev/ticktick-cli
 
 go 1.22
 

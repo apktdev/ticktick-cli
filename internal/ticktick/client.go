@@ -12,7 +12,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/adrian/ticktick-cli/internal/config"
+	"github.com/apktdev/ticktick-cli/internal/config"
 )
 
 const (
