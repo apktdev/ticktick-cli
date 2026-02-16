@@ -1,0 +1,6 @@
+# Build artifacts
+/tick
+/dist/
+
+# Local environment
+.DS_Store
