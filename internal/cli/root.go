@@ -34,7 +34,7 @@ func NewRootCmd() *cobra.Command {
 		shouldPersist: !envOverride,
 	}
 	root := &cobra.Command{
-		Use:   "tick",
+		Use:   "ticktick",
 		Short: "TickTick command line client",
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			return nil

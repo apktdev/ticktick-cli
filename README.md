@@ -17,19 +17,19 @@ A Go-based TickTick CLI inspired by the command-oriented style of `gogcli`.
 2. Build:
 
 ```bash
-go build -o tick ./cmd/tick
+go build -o ticktick ./cmd/ticktick
 ```
 
 3. Install globally (pick one):
 
 ```bash
-go install github.com/apktdev/ticktick-cli/cmd/tick@latest
+go install github.com/apktdev/ticktick-cli/cmd/ticktick@latest
 ```
 
 or
 
 ```bash
-sudo install -m 0755 ./tick /usr/local/bin/tick
+sudo install -m 0755 ./ticktick /usr/local/bin/ticktick
 ```
 
 ## OAuth setup
@@ -43,37 +43,37 @@ Create a TickTick app and get:
 Then:
 
 ```bash
-./tick auth set-client --client-id <id> --client-secret <secret> --redirect-uri <uri>
-./tick auth login-url
+./ticktick auth set-client --client-id <id> --client-secret <secret> --redirect-uri <uri>
+./ticktick auth login-url
 ```
 
 Open the URL, authorize, then copy the returned `code` value:
 
 ```bash
-./tick auth exchange --code <oauth_code>
-./tick auth status
+./ticktick auth exchange --code <oauth_code>
+./ticktick auth status
 ```
 
 ## Commands
 
 ```bash
-./tick projects list
-./tick projects get <project_id>
-./tick projects add --name "Inbox 2" --color "#F18181" --view-mode list --kind TASK
-./tick projects update <project_id> --name "Renamed"
-./tick projects delete <project_id>
-./tick tasks list --project-id <project_id>
-./tick tasks get <project_id> <task_id>
-./tick tasks add --project-id <project_id> --title "Buy milk" --due 2026-02-16
-./tick tasks update <task_id> --project-id <project_id> --title "Buy oat milk"
-./tick tasks complete <project_id> <task_id>
-./tick tasks delete <project_id> <task_id>
+./ticktick projects list
+./ticktick projects get <project_id>
+./ticktick projects add --name "Inbox 2" --color "#F18181" --view-mode list --kind TASK
+./ticktick projects update <project_id> --name "Renamed"
+./ticktick projects delete <project_id>
+./ticktick tasks list --project-id <project_id>
+./ticktick tasks get <project_id> <task_id>
+./ticktick tasks add --project-id <project_id> --title "Buy milk" --due 2026-02-16
+./ticktick tasks update <task_id> --project-id <project_id> --title "Buy oat milk"
+./ticktick tasks complete <project_id> <task_id>
+./ticktick tasks delete <project_id> <task_id>
 ```
 
 Use JSON mode when scripting:
 
 ```bash
-./tick --json projects list
+./ticktick --json projects list
 ```
 
 ## Notes

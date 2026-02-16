@@ -98,10 +98,10 @@ func New(cfg *config.Config) *Client {
 
 func AuthURL(cfg *config.Config, scope, state string) (string, error) {
 	if cfg.ClientID == "" {
-		return "", fmt.Errorf("client_id is missing; run `tick auth set-client`")
+		return "", fmt.Errorf("client_id is missing; run `ticktick auth set-client`")
 	}
 	if cfg.RedirectURI == "" {
-		return "", fmt.Errorf("redirect_uri is missing; run `tick auth set-client`")
+		return "", fmt.Errorf("redirect_uri is missing; run `ticktick auth set-client`")
 	}
 
 	v := url.Values{}
@@ -116,7 +116,7 @@ func AuthURL(cfg *config.Config, scope, state string) (string, error) {
 
 func (c *Client) ExchangeCode(ctx context.Context, code string) error {
 	if c.cfg.ClientID == "" || c.cfg.ClientSecret == "" || c.cfg.RedirectURI == "" {
-		return fmt.Errorf("client configuration incomplete; run `tick auth set-client`")
+		return fmt.Errorf("client configuration incomplete; run `ticktick auth set-client`")
 	}
 
 	v := url.Values{}
@@ -191,7 +191,7 @@ func (c *Client) applyToken(tr *tokenResponse) {
 
 func (c *Client) ensureValidToken(ctx context.Context) error {
 	if c.cfg.AccessToken == "" {
-		return fmt.Errorf("no access token; run `tick auth login-url` and `tick auth exchange`")
+		return fmt.Errorf("no access token; run `ticktick auth login-url` and `ticktick auth exchange`")
 	}
 	if !c.cfg.Expiry.IsZero() && time.Now().After(c.cfg.Expiry.Add(-30*time.Second)) && c.cfg.RefreshToken != "" {
 		if err := c.Refresh(ctx); err != nil {

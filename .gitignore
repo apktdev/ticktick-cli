@@ -1,5 +1,6 @@
 # Build artifacts
 /tick
+/ticktick
 /dist/
 
 # Local environment
