@@ -32,6 +32,14 @@ or
 sudo install -m 0755 ./ticktick /usr/local/bin/ticktick
 ```
 
+## CI Builds
+
+GitHub Actions builds binaries automatically on every push to `main`, tags (`v*`), pull requests, and manual dispatch.
+
+- Open the repository's **Actions** tab.
+- Select the latest **Build** workflow run.
+- Download the artifact matching your platform (for example `ticktick-linux-amd64`).
+
 ## OAuth setup
 
 Create a TickTick app and get:
