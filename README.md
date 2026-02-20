@@ -40,6 +40,23 @@ GitHub Actions builds binaries automatically on every push to `main`, tags (`v*`
 - Select the latest **Build** workflow run.
 - Download the artifact matching your platform (for example `ticktick-linux-amd64`).
 
+## Releases (Public HTTP Downloads)
+
+Version tags automatically publish GitHub Release assets (stable URLs, no `gh` CLI required).
+
+1. Create and push a tag:
+
+```bash
+git tag v0.1.0
+git push origin v0.1.0
+```
+
+2. GitHub Actions runs the **Release** workflow and publishes assets on:
+   - `https://github.com/apktdev/ticktick-cli/releases/tag/v0.1.0`
+
+3. Download directly via URL pattern:
+   - `https://github.com/apktdev/ticktick-cli/releases/download/v0.1.0/ticktick-linux-amd64.tar.gz`
+
 ## OAuth setup
 
 Create a TickTick app and get:
