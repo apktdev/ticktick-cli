@@ -75,7 +75,14 @@ jobs:
             tag_name="${GITHUB_REF_NAME}"
             prerelease="false"
           else
-            tag_name="v0.0.${GITHUB_RUN_NUMBER}"
+            git fetch --tags --force
+            latest_patch="$(git tag -l 'v0.1.*' | sed -E 's/^v0\\.1\\.([0-9]+)$/\\1/' | sort -n | tail -n1)"
+            if [[ -z "${latest_patch}" ]]; then
+              next_patch="1"
+            else
+              next_patch="$((latest_patch + 1))"
+            fi
+            tag_name="v0.1.${next_patch}"
             prerelease="true"
           fi
           echo "tag_name=${tag_name}" >> "${GITHUB_OUTPUT}"

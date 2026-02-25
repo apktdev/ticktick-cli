@@ -48,11 +48,11 @@ Manual version tags (`v*`) publish normal releases.
 Automatic release tags use this format:
 
 ```bash
-v0.0.<github_run_number>
+v0.1.<auto_increment_patch>
 ```
 
 Example prerelease page after a `main` push:
-- `https://github.com/apktdev/ticktick-cli/releases/tag/v0.0.123`
+- `https://github.com/apktdev/ticktick-cli/releases/tag/v0.1.12`
 
 If you want a manual versioned release:
 
