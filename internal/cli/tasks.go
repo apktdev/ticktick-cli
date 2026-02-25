@@ -2,6 +2,8 @@ package cli
 
 import (
 	"context"
+	"fmt"
+	"strings"
 
 	"github.com/apktdev/ticktick-cli/internal/ticktick"
 	"github.com/spf13/cobra"
@@ -40,7 +42,7 @@ func (a *app) newTasksCmd() *cobra.Command {
 		},
 	}
 
-	var addProjectID, addTitle, addContent, addDesc, addStart, addDue, addTimeZone, addRepeat string
+	var addProjectID, addTitle, addContent, addDesc, addStart, addDue, addTimeZone, addRepeat, addKind string
 	var addPriority int
 	var addAllDay bool
 	var addReminders []string
@@ -62,6 +64,10 @@ func (a *app) newTasksCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
+			kind, err := normalizeTaskKind(addKind)
+			if err != nil {
+				return err
+			}
 			created, err := a.client.CreateTask(context.Background(), ticktick.Task{
 				ProjectID:  addProjectID,
 				Title:      addTitle,
@@ -74,6 +80,7 @@ func (a *app) newTasksCmd() *cobra.Command {
 				Reminders:  addReminders,
 				Priority:   addPriority,
 				IsAllDay:   addAllDay,
+				Kind:       kind,
 			})
 			if err != nil {
 				return err
@@ -89,11 +96,12 @@ func (a *app) newTasksCmd() *cobra.Command {
 	add.Flags().StringVar(&addDue, "due", "", "Due date (RFC3339 or YYYY-MM-DD)")
 	add.Flags().StringVar(&addTimeZone, "time-zone", "", "IANA timezone (e.g. America/Los_Angeles)")
 	add.Flags().StringVar(&addRepeat, "repeat", "", "Recurring rule (e.g. RRULE:FREQ=DAILY;INTERVAL=1)")
+	add.Flags().StringVar(&addKind, "kind", "", "Item kind: TEXT, NOTE, CHECKLIST")
 	add.Flags().StringSliceVar(&addReminders, "reminder", nil, "Reminder trigger(s), repeatable")
 	add.Flags().BoolVar(&addAllDay, "all-day", false, "Mark task as all-day")
 	add.Flags().IntVar(&addPriority, "priority", 0, "Priority: 0 none, 1 low, 3 medium, 5 high")
 
-	var updateProjectID, updateTitle, updateContent, updateDesc, updateStart, updateDue, updateTimeZone, updateRepeat string
+	var updateProjectID, updateTitle, updateContent, updateDesc, updateStart, updateDue, updateTimeZone, updateRepeat, updateKind string
 	var updatePriority int
 	var updateAllDay bool
 	var updateReminders []string
@@ -113,6 +121,10 @@ func (a *app) newTasksCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
+			kind, err := normalizeTaskKind(updateKind)
+			if err != nil {
+				return err
+			}
 			updated, err := a.client.UpdateTask(context.Background(), args[0], ticktick.Task{
 				ID:         args[0],
 				ProjectID:  updateProjectID,
@@ -126,6 +138,7 @@ func (a *app) newTasksCmd() *cobra.Command {
 				Reminders:  updateReminders,
 				Priority:   updatePriority,
 				IsAllDay:   updateAllDay,
+				Kind:       kind,
 			})
 			if err != nil {
 				return err
@@ -141,6 +154,7 @@ func (a *app) newTasksCmd() *cobra.Command {
 	update.Flags().StringVar(&updateDue, "due", "", "Due date (RFC3339 or YYYY-MM-DD)")
 	update.Flags().StringVar(&updateTimeZone, "time-zone", "", "IANA timezone (e.g. America/Los_Angeles)")
 	update.Flags().StringVar(&updateRepeat, "repeat", "", "Recurring rule (e.g. RRULE:FREQ=DAILY;INTERVAL=1)")
+	update.Flags().StringVar(&updateKind, "kind", "", "Item kind: TEXT, NOTE, CHECKLIST")
 	update.Flags().StringSliceVar(&updateReminders, "reminder", nil, "Reminder trigger(s), repeatable")
 	update.Flags().BoolVar(&updateAllDay, "all-day", false, "Mark task as all-day")
 	update.Flags().IntVar(&updatePriority, "priority", 0, "Priority: 0 none, 1 low, 3 medium, 5 high")
@@ -171,4 +185,17 @@ func (a *app) newTasksCmd() *cobra.Command {
 
 	tasks.AddCommand(list, get, add, update, complete, deleteCmd)
 	return tasks
+}
+
+func normalizeTaskKind(kind string) (string, error) {
+	if kind == "" {
+		return "", nil
+	}
+	v := strings.ToUpper(strings.TrimSpace(kind))
+	switch v {
+	case "TEXT", "NOTE", "CHECKLIST":
+		return v, nil
+	default:
+		return "", fmt.Errorf("invalid --kind %q; use TEXT, NOTE, or CHECKLIST", kind)
+	}
 }
