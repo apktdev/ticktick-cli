@@ -42,20 +42,27 @@ GitHub Actions builds binaries automatically on every push to `main`, tags (`v*`
 
 ## Releases (Public HTTP Downloads)
 
-Version tags automatically publish GitHub Release assets (stable URLs, no `gh` CLI required).
+Every push to `main` now publishes a GitHub **prerelease** with assets (stable URLs, no `gh` CLI required).
+Manual version tags (`v*`) publish normal releases.
 
-1. Create and push a tag:
+Automatic release tags use this format:
+
+```bash
+v0.0.<github_run_number>
+```
+
+Example prerelease page after a `main` push:
+- `https://github.com/apktdev/ticktick-cli/releases/tag/v0.0.123`
+
+If you want a manual versioned release:
 
 ```bash
 git tag v0.1.0
 git push origin v0.1.0
 ```
 
-2. GitHub Actions runs the **Release** workflow and publishes assets on:
-   - `https://github.com/apktdev/ticktick-cli/releases/tag/v0.1.0`
-
-3. Download directly via URL pattern:
-   - `https://github.com/apktdev/ticktick-cli/releases/download/v0.1.0/ticktick-linux-amd64.tar.gz`
+Download URL pattern:
+- `https://github.com/apktdev/ticktick-cli/releases/download/<tag>/ticktick-linux-amd64.tar.gz`
 
 ## OAuth setup
 
