@@ -2,6 +2,7 @@ package cli
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -42,8 +43,9 @@ func (a *app) newTasksCmd() *cobra.Command {
 		},
 	}
 
-	var addProjectID, addTitle, addContent, addDesc, addStart, addDue, addTimeZone, addRepeat, addKind string
+	var addProjectID, addTitle, addContent, addDesc, addStart, addDue, addTimeZone, addRepeat, addKind, addItemsJSON string
 	var addPriority int
+	var addSortOrder int64
 	var addAllDay bool
 	var addReminders []string
 	add := &cobra.Command{
@@ -68,7 +70,12 @@ func (a *app) newTasksCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			created, err := a.client.CreateTask(context.Background(), ticktick.Task{
+			items, err := parseChecklistItems(addItemsJSON)
+			if err != nil {
+				return err
+			}
+
+			payload := ticktick.Task{
 				ProjectID:  addProjectID,
 				Title:      addTitle,
 				Content:    addContent,
@@ -79,9 +86,15 @@ func (a *app) newTasksCmd() *cobra.Command {
 				RepeatFlag: addRepeat,
 				Reminders:  addReminders,
 				Priority:   addPriority,
+				SortOrder:  addSortOrder,
 				IsAllDay:   addAllDay,
 				Kind:       kind,
-			})
+			}
+			if items != nil {
+				payload.Items = items
+			}
+
+			created, err := a.client.CreateTask(context.Background(), payload)
 			if err != nil {
 				return err
 			}
@@ -98,11 +111,14 @@ func (a *app) newTasksCmd() *cobra.Command {
 	add.Flags().StringVar(&addRepeat, "repeat", "", "Recurring rule (e.g. RRULE:FREQ=DAILY;INTERVAL=1)")
 	add.Flags().StringVar(&addKind, "kind", "", "Item kind: TEXT, NOTE, CHECKLIST")
 	add.Flags().StringSliceVar(&addReminders, "reminder", nil, "Reminder trigger(s), repeatable")
+	add.Flags().StringVar(&addItemsJSON, "items-json", "", "Checklist items JSON array")
 	add.Flags().BoolVar(&addAllDay, "all-day", false, "Mark task as all-day")
 	add.Flags().IntVar(&addPriority, "priority", 0, "Priority: 0 none, 1 low, 3 medium, 5 high")
+	add.Flags().Int64Var(&addSortOrder, "sort-order", 0, "Task sort order")
 
-	var updateProjectID, updateTitle, updateContent, updateDesc, updateStart, updateDue, updateTimeZone, updateRepeat, updateKind string
+	var updateProjectID, updateTitle, updateContent, updateDesc, updateStart, updateDue, updateTimeZone, updateRepeat, updateKind, updateItemsJSON string
 	var updatePriority int
+	var updateSortOrder int64
 	var updateAllDay bool
 	var updateReminders []string
 	update := &cobra.Command{
@@ -113,33 +129,75 @@ func (a *app) newTasksCmd() *cobra.Command {
 			if err := required(updateProjectID, "--project-id"); err != nil {
 				return err
 			}
-			startDate, err := parseDateTime(updateStart)
-			if err != nil {
-				return err
+			if !cmd.Flags().Changed("title") && !cmd.Flags().Changed("content") && !cmd.Flags().Changed("desc") &&
+				!cmd.Flags().Changed("start") && !cmd.Flags().Changed("due") && !cmd.Flags().Changed("time-zone") &&
+				!cmd.Flags().Changed("repeat") && !cmd.Flags().Changed("kind") && !cmd.Flags().Changed("reminder") &&
+				!cmd.Flags().Changed("items-json") && !cmd.Flags().Changed("all-day") && !cmd.Flags().Changed("priority") &&
+				!cmd.Flags().Changed("sort-order") {
+				return fmt.Errorf("at least one update flag is required")
 			}
-			dueDate, err := parseDateTime(updateDue)
-			if err != nil {
-				return err
+			payload := ticktick.TaskUpdate{
+				ID:        args[0],
+				ProjectID: updateProjectID,
 			}
-			kind, err := normalizeTaskKind(updateKind)
-			if err != nil {
-				return err
+
+			if cmd.Flags().Changed("title") {
+				payload.Title = &updateTitle
 			}
-			updated, err := a.client.UpdateTask(context.Background(), args[0], ticktick.Task{
-				ID:         args[0],
-				ProjectID:  updateProjectID,
-				Title:      updateTitle,
-				Content:    updateContent,
-				Desc:       updateDesc,
-				StartDate:  startDate,
-				DueDate:    dueDate,
-				TimeZone:   updateTimeZone,
-				RepeatFlag: updateRepeat,
-				Reminders:  updateReminders,
-				Priority:   updatePriority,
-				IsAllDay:   updateAllDay,
-				Kind:       kind,
-			})
+			if cmd.Flags().Changed("content") {
+				payload.Content = &updateContent
+			}
+			if cmd.Flags().Changed("desc") {
+				payload.Desc = &updateDesc
+			}
+			if cmd.Flags().Changed("start") {
+				startDate, err := parseDateTime(updateStart)
+				if err != nil {
+					return err
+				}
+				payload.StartDate = &startDate
+			}
+			if cmd.Flags().Changed("due") {
+				dueDate, err := parseDateTime(updateDue)
+				if err != nil {
+					return err
+				}
+				payload.DueDate = &dueDate
+			}
+			if cmd.Flags().Changed("time-zone") {
+				payload.TimeZone = &updateTimeZone
+			}
+			if cmd.Flags().Changed("repeat") {
+				payload.RepeatFlag = &updateRepeat
+			}
+			if cmd.Flags().Changed("kind") {
+				kind, err := normalizeTaskKind(updateKind)
+				if err != nil {
+					return err
+				}
+				payload.Kind = &kind
+			}
+			if cmd.Flags().Changed("reminder") {
+				payload.Reminders = &updateReminders
+			}
+			if cmd.Flags().Changed("items-json") {
+				items, err := parseChecklistItems(updateItemsJSON)
+				if err != nil {
+					return err
+				}
+				payload.Items = &items
+			}
+			if cmd.Flags().Changed("all-day") {
+				payload.IsAllDay = &updateAllDay
+			}
+			if cmd.Flags().Changed("priority") {
+				payload.Priority = &updatePriority
+			}
+			if cmd.Flags().Changed("sort-order") {
+				payload.SortOrder = &updateSortOrder
+			}
+
+			updated, err := a.client.UpdateTask(context.Background(), args[0], payload)
 			if err != nil {
 				return err
 			}
@@ -156,8 +214,10 @@ func (a *app) newTasksCmd() *cobra.Command {
 	update.Flags().StringVar(&updateRepeat, "repeat", "", "Recurring rule (e.g. RRULE:FREQ=DAILY;INTERVAL=1)")
 	update.Flags().StringVar(&updateKind, "kind", "", "Item kind: TEXT, NOTE, CHECKLIST")
 	update.Flags().StringSliceVar(&updateReminders, "reminder", nil, "Reminder trigger(s), repeatable")
+	update.Flags().StringVar(&updateItemsJSON, "items-json", "", "Checklist items JSON array")
 	update.Flags().BoolVar(&updateAllDay, "all-day", false, "Mark task as all-day")
 	update.Flags().IntVar(&updatePriority, "priority", 0, "Priority: 0 none, 1 low, 3 medium, 5 high")
+	update.Flags().Int64Var(&updateSortOrder, "sort-order", 0, "Task sort order")
 
 	complete := &cobra.Command{
 		Use:   "complete <project-id> <task-id>",
@@ -198,4 +258,15 @@ func normalizeTaskKind(kind string) (string, error) {
 	default:
 		return "", fmt.Errorf("invalid --kind %q; use TEXT, NOTE, or CHECKLIST", kind)
 	}
+}
+
+func parseChecklistItems(raw string) ([]ticktick.ChecklistItem, error) {
+	if strings.TrimSpace(raw) == "" {
+		return nil, nil
+	}
+	var items []ticktick.ChecklistItem
+	if err := json.Unmarshal([]byte(raw), &items); err != nil {
+		return nil, fmt.Errorf("invalid --items-json: %w", err)
+	}
+	return items, nil
 }

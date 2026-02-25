@@ -2,6 +2,8 @@ package cli
 
 import (
 	"context"
+	"fmt"
+	"strings"
 
 	"github.com/apktdev/ticktick-cli/internal/ticktick"
 	"github.com/spf13/cobra"
@@ -35,6 +37,19 @@ func (a *app) newProjectsCmd() *cobra.Command {
 		},
 	}
 
+	data := &cobra.Command{
+		Use:   "data <project-id>",
+		Short: "Get full project data (project, tasks, columns)",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			item, err := a.client.ProjectData(context.Background(), args[0])
+			if err != nil {
+				return err
+			}
+			return a.print(item)
+		},
+	}
+
 	var name, color, viewMode, kind string
 	var sortOrder int64
 	add := &cobra.Command{
@@ -44,12 +59,20 @@ func (a *app) newProjectsCmd() *cobra.Command {
 			if err := required(name, "--name"); err != nil {
 				return err
 			}
+			normViewMode, err := normalizeProjectViewMode(viewMode)
+			if err != nil {
+				return err
+			}
+			normKind, err := normalizeProjectKind(kind)
+			if err != nil {
+				return err
+			}
 			item, err := a.client.CreateProject(context.Background(), ticktick.Project{
 				Name:      name,
 				Color:     color,
 				SortOrder: sortOrder,
-				ViewMode:  viewMode,
-				Kind:      kind,
+				ViewMode:  normViewMode,
+				Kind:      normKind,
 			})
 			if err != nil {
 				return err
@@ -70,13 +93,36 @@ func (a *app) newProjectsCmd() *cobra.Command {
 		Short: "Update project",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			item, err := a.client.UpdateProject(context.Background(), args[0], ticktick.Project{
-				Name:      updateName,
-				Color:     updateColor,
-				SortOrder: updateSortOrder,
-				ViewMode:  updateViewMode,
-				Kind:      updateKind,
-			})
+			if !cmd.Flags().Changed("name") && !cmd.Flags().Changed("color") && !cmd.Flags().Changed("sort-order") && !cmd.Flags().Changed("view-mode") && !cmd.Flags().Changed("kind") {
+				return fmt.Errorf("at least one update flag is required")
+			}
+
+			payload := ticktick.ProjectUpdate{}
+			if cmd.Flags().Changed("name") {
+				payload.Name = &updateName
+			}
+			if cmd.Flags().Changed("color") {
+				payload.Color = &updateColor
+			}
+			if cmd.Flags().Changed("sort-order") {
+				payload.SortOrder = &updateSortOrder
+			}
+			if cmd.Flags().Changed("view-mode") {
+				normViewMode, err := normalizeProjectViewMode(updateViewMode)
+				if err != nil {
+					return err
+				}
+				payload.ViewMode = &normViewMode
+			}
+			if cmd.Flags().Changed("kind") {
+				normKind, err := normalizeProjectKind(updateKind)
+				if err != nil {
+					return err
+				}
+				payload.Kind = &normKind
+			}
+
+			item, err := a.client.UpdateProject(context.Background(), args[0], payload)
 			if err != nil {
 				return err
 			}
@@ -101,6 +147,32 @@ func (a *app) newProjectsCmd() *cobra.Command {
 		},
 	}
 
-	projects.AddCommand(list, get, add, update, deleteCmd)
+	projects.AddCommand(list, get, data, add, update, deleteCmd)
 	return projects
+}
+
+func normalizeProjectViewMode(viewMode string) (string, error) {
+	if viewMode == "" {
+		return "", nil
+	}
+	v := strings.ToLower(strings.TrimSpace(viewMode))
+	switch v {
+	case "list", "kanban", "timeline":
+		return v, nil
+	default:
+		return "", fmt.Errorf("invalid --view-mode %q; use list, kanban, or timeline", viewMode)
+	}
+}
+
+func normalizeProjectKind(kind string) (string, error) {
+	if kind == "" {
+		return "", nil
+	}
+	v := strings.ToUpper(strings.TrimSpace(kind))
+	switch v {
+	case "TASK", "NOTE":
+		return v, nil
+	default:
+		return "", fmt.Errorf("invalid --kind %q; use TASK or NOTE", kind)
+	}
 }

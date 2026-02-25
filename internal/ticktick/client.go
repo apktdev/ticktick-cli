@@ -89,6 +89,34 @@ type ProjectData struct {
 	Columns []ProjectColumn `json:"columns,omitempty"`
 }
 
+type ProjectUpdate struct {
+	Name      *string `json:"name,omitempty"`
+	Color     *string `json:"color,omitempty"`
+	SortOrder *int64  `json:"sortOrder,omitempty"`
+	ViewMode  *string `json:"viewMode,omitempty"`
+	Kind      *string `json:"kind,omitempty"`
+}
+
+type TaskUpdate struct {
+	ID            string           `json:"id"`
+	ProjectID     string           `json:"projectId"`
+	Title         *string          `json:"title,omitempty"`
+	Content       *string          `json:"content,omitempty"`
+	Desc          *string          `json:"desc,omitempty"`
+	IsAllDay      *bool            `json:"isAllDay,omitempty"`
+	StartDate     *string          `json:"startDate,omitempty"`
+	DueDate       *string          `json:"dueDate,omitempty"`
+	TimeZone      *string          `json:"timeZone,omitempty"`
+	Reminders     *[]string        `json:"reminders,omitempty"`
+	RepeatFlag    *string          `json:"repeatFlag,omitempty"`
+	Priority      *int             `json:"priority,omitempty"`
+	SortOrder     *int64           `json:"sortOrder,omitempty"`
+	Items         *[]ChecklistItem `json:"items,omitempty"`
+	Kind          *string          `json:"kind,omitempty"`
+	CompletedTime *string          `json:"completedTime,omitempty"`
+	Status        *int             `json:"status,omitempty"`
+}
+
 func New(cfg *config.Config) *Client {
 	return &Client{
 		http: &http.Client{Timeout: 20 * time.Second},
@@ -275,7 +303,7 @@ func (c *Client) CreateProject(ctx context.Context, project Project) (*Project, 
 	return &created, nil
 }
 
-func (c *Client) UpdateProject(ctx context.Context, projectID string, project Project) (*Project, error) {
+func (c *Client) UpdateProject(ctx context.Context, projectID string, project ProjectUpdate) (*Project, error) {
 	var updated Project
 	if err := c.doJSON(ctx, http.MethodPost, "/project/"+url.PathEscape(projectID), project, &updated); err != nil {
 		return nil, err
@@ -303,7 +331,7 @@ func (c *Client) CreateTask(ctx context.Context, task Task) (*Task, error) {
 	return &created, nil
 }
 
-func (c *Client) UpdateTask(ctx context.Context, taskID string, task Task) (*Task, error) {
+func (c *Client) UpdateTask(ctx context.Context, taskID string, task TaskUpdate) (*Task, error) {
 	var updated Task
 	if err := c.doJSON(ctx, http.MethodPost, "/task/"+url.PathEscape(taskID), task, &updated); err != nil {
 		return nil, err

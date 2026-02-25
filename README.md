@@ -84,13 +84,15 @@ Open the URL, authorize, then copy the returned `code` value:
 ```bash
 ./ticktick projects list
 ./ticktick projects get <project_id>
+./ticktick projects data <project_id>
 ./ticktick projects add --name "Inbox 2" --color "#F18181" --view-mode list --kind TASK
 ./ticktick projects update <project_id> --name "Renamed"
 ./ticktick projects delete <project_id>
 ./ticktick tasks list --project-id <project_id>
 ./ticktick tasks get <project_id> <task_id>
-./ticktick tasks add --project-id <project_id> --title "Buy milk" --due 2026-02-16
-./ticktick tasks update <task_id> --project-id <project_id> --title "Buy oat milk"
+./ticktick tasks add --project-id <project_id> --title "Buy milk" --due 2026-02-16 --kind NOTE
+./ticktick tasks add --project-id <project_id> --title "Groceries" --kind CHECKLIST --items-json '[{"title":"Milk"},{"title":"Bread"}]'
+./ticktick tasks update <task_id> --project-id <project_id> --title "Buy oat milk" --sort-order 100
 ./ticktick tasks complete <project_id> <task_id>
 ./ticktick tasks delete <project_id> <task_id>
 ```
@@ -115,6 +117,8 @@ Use JSON mode when scripting:
   - `TICKTICK_TOKEN_EXPIRY` (RFC3339, e.g. `2026-08-15T14:47:20Z`)
 - When any env var above is set, env values override file config and config is not auto-saved.
 - Date flags (`--start`, `--due`) accept RFC3339 or `YYYY-MM-DD`.
+- `tasks add`/`tasks update` support `--sort-order` and `--items-json` for checklist item payloads.
+- `tasks update` and `projects update` only send fields you explicitly pass, so explicit clears/`false`/`0` are supported.
 - Official endpoints covered:
   - `GET /open/v1/project`
   - `GET /open/v1/project/{projectId}`
