@@ -79,7 +79,7 @@ jobs:
             prerelease="false"
           else
             git fetch --tags --force
-            latest_patch="$(git tag -l 'v0.1.*' | sed -E 's/^v0\\.1\\.([0-9]+)$/\\1/' | sort -n | tail -n1)"
+            latest_patch="$(git tag -l 'v0.1.*' | sed -E 's/^v0\.1\.([0-9]+)$/\1/' | sort -n | tail -n1)"
             if [[ -z "${latest_patch}" ]]; then
               next_patch="1"
             else
