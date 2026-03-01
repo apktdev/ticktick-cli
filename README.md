@@ -20,6 +20,12 @@ A Go-based TickTick CLI inspired by the command-oriented style of `gogcli`.
 go build -o ticktick ./cmd/ticktick
 ```
 
+Check version:
+
+```bash
+./ticktick --version
+```
+
 3. Install globally (pick one):
 
 ```bash

@@ -18,7 +18,7 @@ type app struct {
 	shouldPersist bool
 }
 
-func NewRootCmd() *cobra.Command {
+func NewRootCmd(version string) *cobra.Command {
 	cfg, err := config.Load()
 	if err != nil {
 		panic(err)
@@ -34,8 +34,9 @@ func NewRootCmd() *cobra.Command {
 		shouldPersist: !envOverride,
 	}
 	root := &cobra.Command{
-		Use:   "ticktick",
-		Short: "TickTick command line client",
+		Use:     "ticktick",
+		Short:   "TickTick command line client",
+		Version: version,
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			return nil
 		},
@@ -46,8 +47,16 @@ func NewRootCmd() *cobra.Command {
 			return config.Save(a.cfg)
 		},
 	}
+	root.SetVersionTemplate("{{.Version}}\n")
 	root.PersistentFlags().BoolVar(&a.jsonMode, "json", false, "Output JSON")
 
+	root.AddCommand(&cobra.Command{
+		Use:   "version",
+		Short: "Print version",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return a.print(version)
+		},
+	})
 	root.AddCommand(a.newAuthCmd())
 	root.AddCommand(a.newProjectsCmd())
 	root.AddCommand(a.newTasksCmd())
