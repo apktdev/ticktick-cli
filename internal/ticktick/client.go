@@ -33,6 +33,29 @@ type tokenResponse struct {
 	Scope        string `json:"scope"`
 }
 
+type TickTickTime string
+
+func (t *TickTickTime) UnmarshalJSON(data []byte) error {
+	if string(data) == "null" {
+		*t = ""
+		return nil
+	}
+
+	var s string
+	if err := json.Unmarshal(data, &s); err == nil {
+		*t = TickTickTime(s)
+		return nil
+	}
+
+	var ms int64
+	if err := json.Unmarshal(data, &ms); err == nil {
+		*t = TickTickTime(time.UnixMilli(ms).UTC().Format("2006-01-02T15:04:05-0700"))
+		return nil
+	}
+
+	return fmt.Errorf("unsupported TickTick time value: %s", string(data))
+}
+
 type Project struct {
 	ID         string `json:"id,omitempty"`
 	Name       string `json:"name,omitempty"`
@@ -46,14 +69,14 @@ type Project struct {
 }
 
 type ChecklistItem struct {
-	ID            string `json:"id,omitempty"`
-	Title         string `json:"title,omitempty"`
-	Status        int    `json:"status,omitempty"`
-	CompletedTime string `json:"completedTime,omitempty"`
-	IsAllDay      bool   `json:"isAllDay,omitempty"`
-	SortOrder     int64  `json:"sortOrder,omitempty"`
-	StartDate     string `json:"startDate,omitempty"`
-	TimeZone      string `json:"timeZone,omitempty"`
+	ID            string       `json:"id,omitempty"`
+	Title         string       `json:"title,omitempty"`
+	Status        int          `json:"status,omitempty"`
+	CompletedTime TickTickTime `json:"completedTime,omitempty"`
+	IsAllDay      bool         `json:"isAllDay,omitempty"`
+	SortOrder     int64        `json:"sortOrder,omitempty"`
+	StartDate     string       `json:"startDate,omitempty"`
+	TimeZone      string       `json:"timeZone,omitempty"`
 }
 
 type Task struct {
